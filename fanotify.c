@@ -20,6 +20,10 @@
 #include <fcntl.h>
 #include <sys/fanotify.h>
 
+#ifndef Py_TYPE
+    #define Py_TYPE(ob) (((PyObject*)(ob))->ob_type)
+#endif
+
 PyDoc_STRVAR(
     fanotify_doc,
     "Functions and classes for interacting with the Linux fanotify interface.\n"
@@ -75,7 +79,7 @@ static int EventMetadata_init(fanotify_EventMetadata *self, PyObject *args,
 
 static void EventMetadata_dealloc(fanotify_EventMetadata *self) {
   Py_XDECREF(self->data);
-  self->ob_type->tp_free((PyObject*)self);
+  PyObject_Free((PyObject*)Py_TYPE(self));
 }
 
 static PyMemberDef EventMetadata_members[] = {

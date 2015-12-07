@@ -14,10 +14,8 @@
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
 
-"""An tool to deny access to a specific file as a documentation example.
+"""A tool to print files as the are opened.
 
-Here we specifically deny access to a file if the user accessing the file isn't
-root.
 """
 
 import os
@@ -36,25 +34,24 @@ def main():
     sys.exit(1)
 
   fan_fd = fanotify.Init(fanotify.FAN_CLASS_CONTENT, os.O_RDONLY)
-  fanotify.Mark(fan_fd, fanotify.FAN_MARK_ADD, fanotify.FAN_OPEN_PERM, -1,
+  print(fanotify)
+  fanotify.Mark(fan_fd,
+                fanotify.FAN_MARK_ADD | fanotify.FAN_MARK_MOUNT,
+                fanotify.FAN_OPEN | fanotify.FAN_EVENT_ON_CHILD,
+                -1,
                 sys.argv[1])
 
-  # Loop continuously rejecting events that don't match root's uid.
   while True:
     buf = os.read(fan_fd, 4096)
     assert buf
     while fanotify.EventOk(buf):
       buf, event = fanotify.EventNext(buf)
-      print(buf)
-      print(event)
-      if IsRootProcess(event.pid):
-        print('Allowing open from root pid {}'.format(event.pid))
-        response = fanotify.FAN_ALLOW
-      else:
-        print('Denying open from pid {}'.format(event.pid))
-        response = fanotify.FAN_DENY
-      os.write(fan_fd, fanotify.Response(event.fd, response))
-      os.close(event.fd)
+      if event.mask & fanotify.FAN_Q_OVERFLOW:
+        print("Queue overflow !")
+        continue
+      fdpath = "/proc/self/fd/%d" % event.fd
+      full_path = os.readlink(fdpath)
+      print(full_path)
     assert not buf
 
 if __name__ == '__main__':
