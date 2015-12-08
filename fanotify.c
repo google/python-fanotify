@@ -21,7 +21,7 @@
 #include <sys/fanotify.h>
 
 #ifndef Py_TYPE
-    #define Py_TYPE(ob) (((PyObject*)(ob))->ob_type)
+  #define Py_TYPE(ob) (((PyObject*)(ob))->ob_type)
 #endif
 
 PyDoc_STRVAR(

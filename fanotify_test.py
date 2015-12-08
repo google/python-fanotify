@@ -13,7 +13,10 @@
 #     limitations under the License.
 
 import os
-import StringIO
+try:
+  import StringIO
+except ImportError:
+  from io import StringIO
 import unittest
 
 import fanotify

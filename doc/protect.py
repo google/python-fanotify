@@ -22,6 +22,7 @@ root.
 
 import os
 import sys
+from __future__ import print_function
 
 import fanotify
 

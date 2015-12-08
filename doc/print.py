@@ -14,18 +14,13 @@
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
 
-"""A tool to print files as the are opened.
-
-"""
+"""A tool to print files as the are opened."""
 
 import os
 import sys
+from __future__ import print_function
 
 import fanotify
-
-
-def IsRootProcess(pid):
-  return os.stat('/proc/{}'.format(pid)).st_uid == 0
 
 
 def main():
@@ -34,7 +29,6 @@ def main():
     sys.exit(1)
 
   fan_fd = fanotify.Init(fanotify.FAN_CLASS_CONTENT, os.O_RDONLY)
-  print(fanotify)
   fanotify.Mark(fan_fd,
                 fanotify.FAN_MARK_ADD | fanotify.FAN_MARK_MOUNT,
                 fanotify.FAN_OPEN | fanotify.FAN_EVENT_ON_CHILD,
@@ -47,9 +41,9 @@ def main():
     while fanotify.EventOk(buf):
       buf, event = fanotify.EventNext(buf)
       if event.mask & fanotify.FAN_Q_OVERFLOW:
-        print("Queue overflow !")
+        print('Queue overflow !')
         continue
-      fdpath = "/proc/self/fd/%d" % event.fd
+      fdpath = '/proc/self/fd/{:d}'.format(event.fd)
       full_path = os.readlink(fdpath)
       print(full_path)
     assert not buf
