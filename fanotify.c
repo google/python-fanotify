@@ -24,6 +24,11 @@
   #define Py_TYPE(ob) (((PyObject*)(ob))->ob_type)
 #endif
 
+#ifndef PyVarObject_HEAD_INIT
+    #define PyVarObject_HEAD_INIT(type, size) \
+        PyObject_HEAD_INIT(type) size,
+#endif
+
 PyDoc_STRVAR(
     fanotify_doc,
     "Functions and classes for interacting with the Linux fanotify interface.\n"
@@ -104,8 +109,7 @@ static PyMemberDef EventMetadata_members[] = {
 };
 
 static PyTypeObject fanotify_EventMetadataType = {
-  PyObject_HEAD_INIT(NULL)
-  0,                                  /* ob_size */
+  PyVarObject_HEAD_INIT(NULL, 0)         /* ob_size, is part of PyVarObject_HEAD_INIT */
   "fanotify.EventMetadata",           /* tp_name */
   sizeof(fanotify_EventMetadata),     /* tp_basicsize */
   0,                                  /* tp_itemsize */
@@ -180,7 +184,7 @@ PyObject *fanotify_Init(PyObject *self, PyObject *args, PyObject *kwargs) {
     return PyErr_SetFromErrno(PyExc_OSError);
   }
 
-  return PyInt_FromLong(fd);
+  return PyLong_FromLong(fd);
 }
 
 PyDoc_STRVAR(
@@ -359,29 +363,58 @@ PyObject *fanotify_Response(PyObject *self, PyObject *args, PyObject *kwargs) {
 }
 
 static PyMethodDef fanotify_methods[] = {
-  {"Init", (PyCFunction)fanotify_Init, METH_KEYWORDS, fanotify_Init_doc},
-  {"Mark", (PyCFunction)fanotify_Mark, METH_KEYWORDS, fanotify_Mark_doc},
-  {"EventNext", (PyCFunction)fanotify_EventNext, METH_KEYWORDS,
+  {"Init", (PyCFunctionWithKeywords)fanotify_Init, METH_VARARGS | METH_KEYWORDS, fanotify_Init_doc},
+  {"Mark", (PyCFunctionWithKeywords)fanotify_Mark, METH_VARARGS | METH_KEYWORDS, fanotify_Mark_doc},
+  {"EventNext", (PyCFunctionWithKeywords)fanotify_EventNext, METH_VARARGS | METH_KEYWORDS,
     fanotify_EventNext_doc},
-  {"EventOk", (PyCFunction)fanotify_EventOk, METH_KEYWORDS,
+  {"EventOk", (PyCFunctionWithKeywords)fanotify_EventOk, METH_VARARGS | METH_KEYWORDS,
     fanotify_EventOk_doc},
-  {"Response", (PyCFunction)fanotify_Response, METH_KEYWORDS,
+  {"Response", (PyCFunctionWithKeywords)fanotify_Response, METH_VARARGS | METH_KEYWORDS,
     fanotify_Response_doc},
 };
 
-PyMODINIT_FUNC initfanotify(void) {
-  if (module)
-    return;
+/* Module definition struct for python3. */
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+  PyModuleDef_HEAD_INIT,
+  "fanotify",       /* m_name */
+  fanotify_doc,     /* m_doc */
+  NULL,             /* m_size */
+  fanotify_methods, /* m_methods */
+  NULL,             /* m_reload */
+  NULL,             /* m_traverse */
+  NULL,             /* m_clear */
+  NULL              /* m_free */
+};
+#endif
 
-  module = Py_InitModule3("fanotify", fanotify_methods, fanotify_doc);
+PyMODINIT_FUNC
+#if PY_MAJOR_VERSION >= 3
+  PyInit_fanotify(void) {
+#else
+  initfanotify(void) {
+#endif
+
+  #if PY_MAJOR_VERSION >= 3
+    printf("(PyModule_Create)\n");
+    module = PyModule_Create(&moduledef);
+  #else
+    module = Py_InitModule3("fanotify", fanotify_methods, fanotify_doc);
+  #endif
+  if (module == NULL)
+    return NULL;
   FanotifyError = PyErr_NewException("fanotify.FanotifyError", NULL, NULL);
   Py_INCREF(FanotifyError);
   PyModule_AddObject(module, "FanotifyError", FanotifyError);
+  printf("2\n");
 
   fanotify_EventMetadataType.tp_new = PyType_GenericNew;
+  printf("3\n");
   if (PyType_Ready(&fanotify_EventMetadataType) < 0) {
-    return;
+    printf("failure pytype.");
+    return NULL;
   }
+  printf("4\n");
   Py_INCREF(&fanotify_EventMetadataType);
   PyModule_AddObject(module, "EventMetadata",
                      (PyObject *)&fanotify_EventMetadataType);
@@ -423,4 +456,8 @@ PyMODINIT_FUNC initfanotify(void) {
   PyModule_AddIntMacro(module, FAN_DENY);
   PyModule_AddIntMacro(module, FAN_NOFD);
   PyModule_AddIntMacro(module, FAN_Q_OVERFLOW);
+
+  #if PY_MAJOR_VERSION >= 3
+    return module;
+  #endif
 }
