@@ -406,15 +406,11 @@ PyMODINIT_FUNC
   FanotifyError = PyErr_NewException("fanotify.FanotifyError", NULL, NULL);
   Py_INCREF(FanotifyError);
   PyModule_AddObject(module, "FanotifyError", FanotifyError);
-  printf("2\n");
 
   fanotify_EventMetadataType.tp_new = PyType_GenericNew;
-  printf("3\n");
   if (PyType_Ready(&fanotify_EventMetadataType) < 0) {
-    printf("failure pytype.");
     return NULL;
   }
-  printf("4\n");
   Py_INCREF(&fanotify_EventMetadataType);
   PyModule_AddObject(module, "EventMetadata",
                      (PyObject *)&fanotify_EventMetadataType);
