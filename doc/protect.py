@@ -46,8 +46,6 @@ def main():
     assert buf
     while fanotify.EventOk(buf):
       buf, event = fanotify.EventNext(buf)
-      print(buf)
-      print(event)
       if IsRootProcess(event.pid):
         print('Allowing open from root pid {}'.format(event.pid))
         response = fanotify.FAN_ALLOW
