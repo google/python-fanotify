@@ -20,9 +20,9 @@ Here we specifically deny access to a file if the user accessing the file isn't
 root.
 """
 
+from __future__ import print_function
 import os
 import sys
-from __future__ import print_function
 
 import fanotify
 

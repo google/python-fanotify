@@ -13,19 +13,16 @@
 #     limitations under the License.
 
 import os
-try:
-  import StringIO
-except ImportError:
-  from io import StringIO
+import io
 import unittest
 
 import fanotify
 
 # This test event is for a read on fd 4 with pid 7345.
-TEST_EVENT = ('\x18\x00\x00\x00\x03\x00\x18\x00\x00\x00\x01\x00\x00\x00\x00\x00'
-              '\x04\x00\x00\x00\xb1\x1c\x00\x00')
+TEST_EVENT = b'\x18\x00\x00\x00\x03\x00\x18\x00\x00\x00\x01\x00\x00\x00\x00\x00' + \
+             b'\x04\x00\x00\x00\xb1\x1c\x00\x00'
 # This test response is for fd 4 with FAN_ALLOW.
-TEST_RESPONSE = '\x04\x00\x00\x00\x01\x00\x00\x00'
+TEST_RESPONSE = b'\x04\x00\x00\x00\x01\x00\x00\x00'
 
 
 class FanotifyTest(unittest.TestCase):
@@ -47,7 +44,7 @@ class FanotifyTest(unittest.TestCase):
 
   def TestEventNextRaisesError(self):
     with self.assertRaises(fanotify.FanotifyError):
-      fanotify.EventNext('')
+      fanotify.EventNext(b'')
 
   def TestEventOk(self):
     self.assertEqual(fanotify.EventOk(TEST_EVENT), True)
@@ -58,8 +55,8 @@ class FanotifyTest(unittest.TestCase):
 
   def TestReadLoop(self):
     # Create a buffer with 1024 events in it
-    r = StringIO.StringIO(TEST_EVENT * 1024)
-    w = StringIO.StringIO()
+    r = io.BytesIO(TEST_EVENT * 1024)
+    w = io.BytesIO()
 
     # Continue reading and handling events until we've seen all 1024
     c = 0
@@ -69,7 +66,8 @@ class FanotifyTest(unittest.TestCase):
       buf = r.read(len(TEST_EVENT) * 16)
       while fanotify.EventOk(buf):
         buf, event = fanotify.EventNext(buf)
-        w.write(fanotify.Response(event.fd, fanotify.FAN_ALLOW))
+        res = fanotify.Response(event.fd, fanotify.FAN_ALLOW)
+        w.write(res)
         c += 1
 
     self.assertEqual(w.getvalue(), TEST_RESPONSE * 1024)

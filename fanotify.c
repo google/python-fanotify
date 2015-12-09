@@ -25,8 +25,14 @@
 #endif
 
 #ifndef PyVarObject_HEAD_INIT
-    #define PyVarObject_HEAD_INIT(type, size) \
-        PyObject_HEAD_INIT(type) size,
+  #define PyVarObject_HEAD_INIT(type, size) \
+    PyObject_HEAD_INIT(type) size,
+#endif
+
+#if PY_MAJOR_VERSION >= 3
+  static char *byte_arg_str = "y#";
+#else
+  static char *byte_arg_str = "s#";
 #endif
 
 PyDoc_STRVAR(
@@ -65,7 +71,7 @@ static int EventMetadata_init(fanotify_EventMetadata *self, PyObject *args,
   const void *buf = NULL;
   Py_ssize_t buf_size = 0;
 
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s#", kwlist, &buf,
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, byte_arg_str, kwlist, &buf,
                                    &buf_size)) {
     return -1;
   }
@@ -76,7 +82,7 @@ static int EventMetadata_init(fanotify_EventMetadata *self, PyObject *args,
   buf += sizeof(*event);
 
   PyObject *temp_data = self->data;
-  self->data = Py_BuildValue("s#", buf, data_size);
+  self->data = Py_BuildValue(byte_arg_str, buf, data_size);
   Py_XDECREF(temp_data);
 
   return 0;
@@ -113,7 +119,7 @@ static PyTypeObject fanotify_EventMetadataType = {
   "fanotify.EventMetadata",           /* tp_name */
   sizeof(fanotify_EventMetadata),     /* tp_basicsize */
   0,                                  /* tp_itemsize */
-  (destructor)EventMetadata_dealloc,  /* tp_dealloc */
+  0, //(destructor)EventMetadata_dealloc,  /* tp_dealloc */
   0,                                  /* tp_print */
   0,                                  /* tp_getattr */
   0,                                  /* tp_setattr */
@@ -270,11 +276,13 @@ PyObject *fanotify_EventNext(PyObject *self, PyObject *args, PyObject *kwargs) {
   const void *buf = NULL;
   Py_ssize_t buf_size = 0;
 
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s#", kwlist, &buf,
+
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, byte_arg_str, kwlist, &buf,
                                    &buf_size)) {
     return NULL;
   }
 
+  // printf("\nbufsize ---> %i\n", buf_size);
   const struct fanotify_event_metadata *event = buf;
   if (!FAN_EVENT_OK(event, buf_size)) {
     PyErr_SetString(
@@ -292,8 +300,9 @@ PyObject *fanotify_EventNext(PyObject *self, PyObject *args, PyObject *kwargs) {
                                                 buf_size - new_buf_size);
   PyObject *event_metadata = PyObject_CallObject(
       (PyObject *)&fanotify_EventMetadataType, event_metadata_args);
-  Py_DECREF(event_metadata_args);
+  Py_XDECREF(event_metadata_args);
 
+  #
   return Py_BuildValue("s#O", new_buf, new_buf_size, event_metadata);
 }
 
@@ -346,7 +355,8 @@ PyDoc_STRVAR(
     "    FAN_DENY.\n"
     "\n"
     "Returns:\n"
-    "  A string containing the raw bytes of the fanotify_response struct.\n");
+    "  A string containing the raw bytes of the fanotify_response struct.\n"
+    "  (specifically a str object for python 2 and bytes object for python 3.\n");
 PyObject *fanotify_Response(PyObject *self, PyObject *args, PyObject *kwargs) {
   static char *kwlist[] = {"fd", "response", NULL};
   int fd = -1;
@@ -359,7 +369,7 @@ PyObject *fanotify_Response(PyObject *self, PyObject *args, PyObject *kwargs) {
 
   struct fanotify_response fanotify_response = {fd, response};
 
-  return Py_BuildValue("s#", &fanotify_response, sizeof(fanotify_response));
+  return Py_BuildValue(byte_arg_str, &fanotify_response, sizeof(fanotify_response));
 }
 
 static PyMethodDef fanotify_methods[] = {
@@ -396,7 +406,6 @@ PyMODINIT_FUNC
 #endif
 
   #if PY_MAJOR_VERSION >= 3
-    printf("(PyModule_Create)\n");
     module = PyModule_Create(&moduledef);
   #else
     module = Py_InitModule3("fanotify", fanotify_methods, fanotify_doc);

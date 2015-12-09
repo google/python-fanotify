@@ -16,9 +16,9 @@
 
 """A tool to print files as the are opened."""
 
+from __future__ import print_function
 import os
 import sys
-from __future__ import print_function
 
 import fanotify
 
