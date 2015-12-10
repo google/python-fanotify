@@ -31,8 +31,12 @@
 
 #if PY_MAJOR_VERSION >= 3
   static char *byte_arg_str = "y#";
+  static char *byte_arg_str_tuple = "(y#)";
+  static char *byte_arg_str_event_tuple = "y#O";
 #else
   static char *byte_arg_str = "s#";
+  static char *byte_arg_str_tuple = "(s#)";
+  static char *byte_arg_str_event_tuple = "s#O";
 #endif
 
 PyDoc_STRVAR(
@@ -119,7 +123,7 @@ static PyTypeObject fanotify_EventMetadataType = {
   "fanotify.EventMetadata",           /* tp_name */
   sizeof(fanotify_EventMetadata),     /* tp_basicsize */
   0,                                  /* tp_itemsize */
-  0, //(destructor)EventMetadata_dealloc,  /* tp_dealloc */
+  (destructor)EventMetadata_dealloc,  /* tp_dealloc */
   0,                                  /* tp_print */
   0,                                  /* tp_getattr */
   0,                                  /* tp_setattr */
@@ -282,7 +286,6 @@ PyObject *fanotify_EventNext(PyObject *self, PyObject *args, PyObject *kwargs) {
     return NULL;
   }
 
-  // printf("\nbufsize ---> %i\n", buf_size);
   const struct fanotify_event_metadata *event = buf;
   if (!FAN_EVENT_OK(event, buf_size)) {
     PyErr_SetString(
@@ -296,14 +299,14 @@ PyObject *fanotify_EventNext(PyObject *self, PyObject *args, PyObject *kwargs) {
       FAN_EVENT_NEXT(event, new_buf_size);
   const char *new_buf = (const void *)next_event;
 
-  PyObject *event_metadata_args = Py_BuildValue("(s#)", buf,
+  PyObject *event_metadata_args = Py_BuildValue(byte_arg_str_tuple, buf,
                                                 buf_size - new_buf_size);
   PyObject *event_metadata = PyObject_CallObject(
       (PyObject *)&fanotify_EventMetadataType, event_metadata_args);
   Py_XDECREF(event_metadata_args);
 
   #
-  return Py_BuildValue("s#O", new_buf, new_buf_size, event_metadata);
+  return Py_BuildValue(byte_arg_str_event_tuple, new_buf, new_buf_size, event_metadata);
 }
 
 PyDoc_STRVAR(
@@ -325,7 +328,7 @@ PyObject *fanotify_EventOk(PyObject *self, PyObject *args, PyObject *kwargs) {
   const void *buf = NULL;
   Py_ssize_t buf_size = 0;
 
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s#", kwlist, &buf,
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, byte_arg_str, kwlist, &buf,
                                    &buf_size)) {
     return NULL;
   }

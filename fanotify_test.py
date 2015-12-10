@@ -38,7 +38,7 @@ class FanotifyTest(unittest.TestCase):
 
   def TestEventNext(self):
     remaining_buf, event = fanotify.EventNext(TEST_EVENT)
-    self.assertEqual(remaining_buf, '')
+    self.assertEqual(remaining_buf, b'')
     self.assertEqual(event.fd, 4)
     self.assertEqual(event.pid, 7345)
 
@@ -48,7 +48,7 @@ class FanotifyTest(unittest.TestCase):
 
   def TestEventOk(self):
     self.assertEqual(fanotify.EventOk(TEST_EVENT), True)
-    self.assertEqual(fanotify.EventOk(''), False)
+    self.assertEqual(fanotify.EventOk(b''), False)
 
   def TestResponse(self):
     self.assertEqual(fanotify.Response(4, fanotify.FAN_ALLOW), TEST_RESPONSE)
