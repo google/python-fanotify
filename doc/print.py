@@ -46,6 +46,7 @@ def main():
       fdpath = '/proc/self/fd/{:d}'.format(event.fd)
       full_path = os.readlink(fdpath)
       print(full_path)
+      os.close(event.fd)
     assert not buf
 
 if __name__ == '__main__':
