@@ -388,6 +388,7 @@ static PyMethodDef fanotify_methods[] = {
     fanotify_EventOk_doc},
   {"Response", (PyCFunction)fanotify_Response, METH_VARARGS | METH_KEYWORDS,
     fanotify_Response_doc},
+  {NULL}
 };
 
 /* Module definition struct for python3. */
