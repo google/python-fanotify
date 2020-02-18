@@ -1,3 +1,9 @@
+python-fanotify (1.0) unstable; urgency=medium
+
+  * Initial release
+
+ -- Markus Teich <mteich@google.com>  Tue, 18 Feb 2020 17:51:24 +0100
+
 python-fanotify (0.1) unstable; urgency=medium
 
   * Initial release.

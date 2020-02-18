@@ -27,7 +27,7 @@ EXT_MODULES = [
 
 setup(
     name='fanotify',
-    version='0.2',
+    version='1.0',
     author='Mike Gerow',
     author_email='gerow@google.com',
     description=('Library to interface with linux fanotify features.'),
