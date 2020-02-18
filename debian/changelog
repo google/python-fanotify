@@ -1,0 +1,5 @@
+python-fanotify (0.1) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Mike Gerow <gerow@google.com>  Tue, 01 Sep 2015 15:15:27 -0700

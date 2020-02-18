@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --with=python2,python3 --buildsystem=pybuild
+
+override_dh_python2:
+		dh_python2 --shebang '/usr/bin/python2 -sE'
+
+override_dh_python3:
+		dh_python3 --shebang '/usr/bin/python3 -sE'
