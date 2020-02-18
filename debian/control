@@ -1,0 +1,36 @@
+Source: python-fanotify
+Maintainer: Mike Gerow <gerow@google.com>
+Section: python
+Priority: optional
+Build-Depends:
+ debhelper (>= 12.7.2),
+ dh-python,
+ python-all-dev,
+ python-nose,
+ python-setuptools,
+ python3-all-dev,
+ python3-nose,
+ python3-setuptools,
+Standards-Version: 4.4.0
+
+Package: python-fanotify
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${python:Depends},
+ ${shlibs:Depends},
+ python,
+Description: Interface to linux's fanotify system calls for python2.
+ This library allows you to monitor and control accesses to files. For more
+ information see the man pages on fanotify itself.
+
+Package: python3-fanotify
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ ${shlibs:Depends},
+ python3,
+Description: Interface to linux's fanotify system calls for python3.
+ This library allows you to monitor and control accesses to files. For more
+ information see the man pages on fanotify itself.
