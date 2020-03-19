@@ -1,3 +1,5 @@
+This package is no longer maintained. See https://github.com/google/python-fanotify/issues/5.
+
 # Overview
 
 python-fanotify provides Python bindings for Linux's fanotify interface. See the
